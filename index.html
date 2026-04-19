@@ -145,7 +145,7 @@ body {
   object-fit: contain;                     /* never distort */
   -webkit-font-smoothing: antialiased;
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  image-rendering: auto;
   /* subtle shadow — no box, no halo */
   filter: drop-shadow(0px 8px 18px rgba(0,0,0,.10));
   background: transparent;
@@ -194,7 +194,7 @@ canvas.img-canvas {
    GANESH SECTION
 ══════════════════════════════════════════ */
 #sec-ganesh {
-  padding-top: min(14vw, 110px); padding-bottom: 2.5rem;
+  padding-top: min(22vw, 160px); padding-bottom: 2.5rem;
   display: flex; flex-direction: column; align-items: center; gap: .7rem;
 }
 #ganesh-canvas {
@@ -226,7 +226,7 @@ canvas.img-canvas {
    KALASH
 ══════════════════════════════════════════ */
 #kalash-canvas {
-  width: min(140px, 36vw); height: auto; display: block; margin: 0 auto;
+  width: min(180px, 46vw); height: auto; display: block; margin: 0 auto;
   filter: drop-shadow(0 12px 22px rgba(60,20,10,.16)) drop-shadow(0 2px 6px rgba(201,163,78,.22));
 }
 #kalash-shadow {
@@ -398,7 +398,7 @@ p, li, span, small,
   .name-text { font-size:clamp(3rem,12vw,4.2rem); }
   .event-title { font-size:clamp(2.4rem,9vw,3.5rem); }
   #couple-wrap { max-width:94vw; }
-  #ganesh-canvas { width: min(180px,55vw); }
+  #ganesh-canvas { width: min(270px, 64vw); }
 }
 </style>
 </head>
@@ -1153,7 +1153,7 @@ async function initImages(){
   try {
     const img = await loadImg(SRC.ganesh);
     const cvs = document.getElementById('ganesh-canvas');
-    const w = vwPx(52, 220);
+    const w = vwPx(64, 270);
     await removeBG(img, cvs, { tolerance:60, outputWidth:w });
     cvs.style.width = w + 'px';
     cvs.style.height = 'auto';
@@ -1163,7 +1163,7 @@ async function initImages(){
   try {
     const img = await loadImg(SRC.kalash);
     const cvs = document.getElementById('kalash-canvas');
-    const w = vwPx(36, 140);
+    const w = vwPx(46, 180);
     await removeBG(img, cvs, { tolerance:55, outputWidth:w });
   } catch(e){ console.warn('Kalash:', e.message); }
 
