@@ -70,15 +70,16 @@ body {
 /* ══════════════════════════════════════════
    MUSIC BUTTON — floating, minimal, circular
 ══════════════════════════════════════════ */
-#music-btn { display: none !important; }
-#music-btn-old-ignore {
+#music-btn { display: none; }
+#music-btn.visible { display: flex !important; }
+#music-btn {
   position: fixed; top: 18px; right: 18px; z-index: 9000;
   width: 42px; height: 42px; border-radius: 50%;
   border: 1.5px solid rgba(201,163,78,.55);
   background: rgba(248,241,231,.85);
   backdrop-filter: blur(8px);
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+  align-items: center; justify-content: center;
   box-shadow: 0 2px 14px rgba(60,20,10,.12);
   transition: border-color .3s ease, box-shadow .3s ease, transform .2s ease;
   outline: none;
@@ -1598,34 +1599,59 @@ function launchConfetti(){
 ───────────────────────────────────────────────*/
 function initAudio(){
   const audio = document.getElementById('bg-audio');
+  const musicBtn = document.getElementById('music-btn');
   if(!audio) return;
 
   audio.loop = true;
   audio.muted = true;
   audio.volume = 0;
 
-  // Kick off muted autoplay immediately (allowed on Android Chrome when muted)
-  const startMuted = () => {
-    const p = audio.play();
-    if (p && p.catch) p.catch(()=>{});
+  const showMusicButton = () => {
+    if (!musicBtn) return;
+    musicBtn.classList.add('visible');
+  };
+
+  const updateMusicButton = (playing) => {
+    if (!musicBtn) return;
+    musicBtn.classList.toggle('playing', playing);
+    musicBtn.classList.add('visible');
+  };
+
+  const tryPlay = async () => {
+    try {
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.then === 'function') await playPromise;
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const fadeIn = () => {
+    let volume = 0;
+    const target = 0.35;
+    const intervalId = setInterval(() => {
+      volume = Math.min(target, volume + 0.03);
+      audio.volume = volume;
+      if (volume >= target) clearInterval(intervalId);
+    }, 80);
+  };
+
+  const startMuted = async () => {
+    const started = await tryPlay();
+    if (!started) showMusicButton();
   };
   startMuted();
 
   let unmuted = false;
-  const unmute = () => {
+  const unmute = async () => {
     if (unmuted) return;
     unmuted = true;
     audio.muted = false;
-    // Fade in volume
-    let v = 0;
-    const target = 0.35;
-    const fade = setInterval(() => {
-      v = Math.min(target, v + 0.03);
-      audio.volume = v;
-      if (v >= target) clearInterval(fade);
-    }, 80);
-    const p = audio.play();
-    if (p && p.catch) p.catch(()=>{});
+    audio.volume = 0;
+    const played = await tryPlay();
+    if (played) fadeIn();
+    else showMusicButton();
     ['touchstart','click','scroll','keydown','pointerdown'].forEach(ev =>
       window.removeEventListener(ev, unmute)
     );
@@ -1635,11 +1661,26 @@ function initAudio(){
     window.addEventListener(ev, unmute, { passive: true })
   );
 
-  // Resume if tab becomes visible again
+  if (musicBtn) {
+    musicBtn.addEventListener('click', async (event) => {
+      event.stopPropagation();
+      if (audio.paused) {
+        audio.muted = false;
+        audio.volume = 0;
+        const played = await tryPlay();
+        if (played) fadeIn();
+      } else {
+        audio.pause();
+      }
+    });
+  }
+
+  audio.addEventListener('play', () => updateMusicButton(true));
+  audio.addEventListener('pause', () => updateMusicButton(false));
+
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
-      const p = audio.play();
-      if (p && p.catch) p.catch(()=>{});
+      tryPlay();
     }
   });
 }
